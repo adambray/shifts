@@ -30,7 +30,7 @@ class Shift < ActiveRecord::Base
   scope :on_day, ->(day){ where("start >= ? and start < ?", day.beginning_of_day.utc, day.end_of_day.utc) }
   scope :on_days, ->(start_day, end_day){ where("start  >= ? and start < ?",start_day.beginning_of_day.utc , end_day.end_of_day.utc) }
   scope :between, ->(start, stop){ where("start  >= ? and start  < ?", start.utc, stop.utc) }
-  scope :overlaps, ->(start, stop){ where("end > ? and start  < ?", start.utc, stop.utc) }
+  scope :overlaps, ->(start, stop){ where("'end' > ? and start  < ?", start.utc, stop.utc) }
   scope :in_department, ->(dept){ where(department_id: dept.id) }
   scope :in_departments, ->(dept_array){ where(department_id: dept_array.collect(&:id)) }
   scope :in_location, ->(loc){ where(location_id: loc.id) }
@@ -38,11 +38,11 @@ class Shift < ActiveRecord::Base
   scope :in_calendars, ->(calendar_array){ where(calendar_id: calendar_array) }
   scope :scheduled, where(scheduled: true)
   scope :unscheduled, where(scheduled: false)
-  scope :super_search, ->(start, stop, incr, locs){ where("( (start >= ? and start < ?) or (end > ? and end <= ?) ) and scheduled  = ? and location_id IN ?", start.utc, stop.utc - incr, start.utc + incr, stop.utc, true, locs).order("location_id , start") }
-  scope :hidden_search, ->(start, stop, day_start, day_end, locs){ where("( (start >= ? and end < ?) or (start >= ? and start < ?) ) and scheduled = ? and location_id IN (?)", day_start.utc, start.utc, stop.utc, day_end.utc, true, locs).order("location_id  , start  ") }
+  scope :super_search, ->(start, stop, incr, locs){ where("( (start >= ? and start < ?) or ('end' > ? and 'end' <= ?) ) and scheduled  = ? and location_id IN ?", start.utc, stop.utc - incr, start.utc + incr, stop.utc, true, locs).order("location_id , start") }
+  scope :hidden_search, ->(start, stop, day_start, day_end, locs){ where("( (start >= ? and 'end' < ?) or (start >= ? and start < ?) ) and scheduled = ? and location_id IN (?)", day_start.utc, start.utc, stop.utc, day_end.utc, true, locs).order("location_id  , start  ") }
   scope :signed_in, ->(department){where(signed_in: true, department_id: department.id)}
   scope :ordered_by_start, order('start')
-  scope :after_date, ->(start_day){ where("end >= ?", start_day.beginning_of_day.utc) }
+  scope :after_date, ->(start_day){ where("'end' >= ?", start_day.beginning_of_day.utc) }
   scope :stats_unsent, where(stats_unsent: true)
   scope :stale_shifts_unsent, where(stale_shifts_unsent: true)
   scope :parsed, where(parsed: true)
@@ -119,7 +119,7 @@ class Shift < ActiveRecord::Base
 
   def self.make_future(event, location, wipe)
     cal = event.calendar
-    if cal.active 
+    if cal.active
       shift_scope = Shift.active
     else
       shift_scope = Shift.where(calendar_id: cal.id)
@@ -290,7 +290,7 @@ class Shift < ActiveRecord::Base
             self.save(validate: false)
           end
         end
-        if (shift_earlier = Shift.where("end = ? AND user_id = ? AND location_id = ? AND calendars.active = ?", self.start, self.user_id, self.location_id, self.calendar.active?).includes(:calendar).first) && (!shift_earlier.has_sub?)
+        if (shift_earlier = Shift.where("'end'= ? AND user_id = ? AND location_id = ? AND calendars.active = ?", self.start, self.user_id, self.location_id, self.calendar.active?).includes(:calendar).first) && (!shift_earlier.has_sub?)
           if (self.report.nil?) && (shift_earlier.report.nil? || shift_earlier.report.departed.nil?)
             self.start = shift_earlier.start
             shift_earlier.sub_requests.each {|s| s.shift = self}
@@ -439,10 +439,10 @@ class Shift < ActiveRecord::Base
   def shift_is_within_time_slot
     unless self.power_signed_up
       if (self.calendar.default || self.calendar.active)
-        c = TimeSlot.where("location_id = ? AND start <= ? AND end >= ? AND active  = ?", self.location_id, self.start, self.end, true).count
+        c = TimeSlot.where("location_id = ? AND start <= ? AND 'end' >= ? AND active  = ?", self.location_id, self.start, self.end, true).count
       else
         #If users are signing up into a non-active calendar, we want to make sure we still respect the (non-active) timeslots present in that calendar
-        c = TimeSlot.where("location_id = ? AND start <= ? AND end >= ? AND calendar_id = ?", self.location_id, self.start, self.end, self.calendar_id).count
+        c = TimeSlot.where("location_id = ? AND start <= ? AND 'end' >= ? AND calendar_id = ?", self.location_id, self.start, self.end, self.calendar_id).count
       end
       errors.add(:base, "You can only sign up for a shift during a time slot.") if c == 0
     end
@@ -561,4 +561,3 @@ class Shift < ActiveRecord::Base
     end
   end
 end
-

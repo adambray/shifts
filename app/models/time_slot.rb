@@ -23,11 +23,11 @@ class TimeSlot < ActiveRecord::Base
   scope :in_calendars, ->(calendar_array){ where(calendar_id: calendar_array) }
 
   scope :on_days, ->(start_day, end_day){ where("start >= ? and start < ?", start_day.beginning_of_day.utc, end_day.end_of_day.utc) }
-  scope :on_day, ->(day){ where("end >= ? AND start < ?", day.beginning_of_day.utc, day.end_of_day.utc) }
-  scope :on_48h, ->(day){ where("end >= ? AND start < ?", day.beginning_of_day.utc, (day.end_of_day + 1.day).utc) }
-  scope :overlaps, ->(start, stop){ where("end > ? and start < ?", start.utc, stop.utc) }
+  scope :on_day, ->(day){ where("'end'>= ? AND start < ?", day.beginning_of_day.utc, day.end_of_day.utc) }
+  scope :on_48h, ->(day){ where("'end'>= ? AND start < ?", day.beginning_of_day.utc, (day.end_of_day + 1.day).utc) }
+  scope :overlaps, ->(start, stop){ where("'end'> ? and start < ?", start.utc, stop.utc) }
   scope :ordered_by_start, order('start')
-  scope :after_now, -> { where("end >= ?", Time.now.utc) }
+  scope :after_now, -> { where("'end' >= ?", Time.now.utc) }
 
 
 
@@ -123,9 +123,9 @@ class TimeSlot < ActiveRecord::Base
     dont_conflict_with_self = (self.new_record? ? "" : "AND id != #{self.id}")
 
     if self.calendar.active
-      c = TimeSlot.where("start < ? AND end > ? AND location_id = ? AND active = ? #{dont_conflict_with_self}", self.end, self.start, self.location, true).count
+      c = TimeSlot.where("start < ? AND 'end' > ? AND location_id = ? AND active = ? #{dont_conflict_with_self}", self.end, self.start, self.location, true).count
     else
-      c = TimeSlot.where("start < ? AND end > ? AND location_id = ? AND calendar_id = ? #{dont_conflict_with_self}", self.end, self.start, self.location, self.calendar.id).count
+      c = TimeSlot.where("start < ? AND 'end' > ? AND location_id = ? AND calendar_id = ? #{dont_conflict_with_self}", self.end, self.start, self.location, self.calendar.id).count
     end
     unless c == 0
       errors.add(:base, "There is a conflicting timeslot.")
@@ -146,4 +146,3 @@ class TimeSlot < ActiveRecord::Base
     end
   end
 end
-

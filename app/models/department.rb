@@ -43,7 +43,7 @@ class Department < ActiveRecord::Base
   end
     
   def sub_requests
-    SubRequest.where("end >= ?", Time.now).select { |sub| sub.shift.department == self }
+    SubRequest.where("'end' >= ?", Time.now).select { |sub| sub.shift.department == self }
   end
 
   def links

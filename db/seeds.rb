@@ -110,7 +110,7 @@ def user_gen
 end
 
 def loc_group_gen
-  begin 
+  begin
     lgn = Faker::Address.state
   end until LocGroup.where(name: lgn).empty?
   @department.loc_groups.create!(name: lgn)
@@ -150,7 +150,7 @@ def user_profile_entry_gen(field, user)
     when "Gender"
       entry.content = ["M","F"][rand(2)]
     when "OS"
-      entry.content = ["Linux", "OS X","Windows"].sample(1+rand(3)).sort.join(", ")     
+      entry.content = ["Linux", "OS X","Windows"].sample(1+rand(3)).sort.join(", ")
     when "Pic"
       entry.content = "http://d24w6bsrhbeh9d.cloudfront.net/photo/aD0OoQK_700b.jpg" if rand()<USER_HAS_PIC_CHANCE
     end
@@ -202,7 +202,7 @@ def link_gen(locations=nil)
   a.remove(@su) if rand() > ACTIVE_NOTICE_CHANCE
 end
 
-def repeating_time_slots_gen(locations)    
+def repeating_time_slots_gen(locations)
   loc_ids = locations.map(&:id).sort.join(',')
   re = RepeatingEvent.new(calendar: @calendar, is_set_of_timeslots: true)
   re.days_of_week = [1,2,3,4,5,6,7].sample((7*WEEKDAY_HAS_TIME_SLOT_CHANCE).to_i).sort.join(',')
@@ -231,7 +231,7 @@ def shift_gen(location, date, user)
   shift.start = shift_start
   shift.end = shift_end
   shift.power_signed_up = true # to avoid validation trouble
-  shift.save!
+  shift.save
 end
 
 def task_gen(location)
@@ -288,7 +288,7 @@ def payform_item_gen(payform, cat)
   item.save!
 end
 
-def print_payforms    
+def print_payforms
   set = PayformSet.new(department: @department)
   set.payforms = @department.payforms.unprinted
   set.payforms.map {|p| p.printed = Time.now}
@@ -303,7 +303,7 @@ def report_gen(shift)
   report = Report.new(shift: shift, arrived: shift.start)
   report.save!
   ip = Faker::Internet.ip_v4_address
-  N_REPORT_ITEMS_PER_REPORT.times do 
+  N_REPORT_ITEMS_PER_REPORT.times do
     report_item_gen(report, ip)
   end
   report.update_attributes(departed: shift.end)
@@ -331,7 +331,7 @@ progress_bar_gen("AppConfig [1/16]", 1) do
 end
 
 # Then Department
-progress_bar_gen("Department [2/16]", 1) do 
+progress_bar_gen("Department [2/16]", 1) do
   @department = Department.create!(name: "SDMP")
   @department_config = @department.department_config
   # Setting end-time to 11pm
@@ -343,7 +343,7 @@ progress_bar_gen("Department [2/16]", 1) do
 end
 
 # Create superuser
-progress_bar_gen("Superuser [3/16]", 1) do 
+progress_bar_gen("Superuser [3/16]", 1) do
   @su = user_gen
   @su.superuser = true
   puts;prompt_field(@su, "login")
@@ -351,7 +351,7 @@ end
 
 # Creating Locations and Location Groups
 progress_bar_gen("Locations [4/16]", N_LOC_GROUPS*N_LOCATIONS_PER_GROUP) do |bar|
-  N_LOC_GROUPS.times do 
+  N_LOC_GROUPS.times do
     loc_group = loc_group_gen
     loc_group.update_attributes(public: false) if rand()>PUBLIC_LOC_GROUP_CHANCE
     N_LOCATIONS_PER_GROUP.times {location_gen(loc_group); bar.increment}
@@ -370,7 +370,7 @@ end
 
 # Creating Users
 progress_bar_gen("Users [6/16]", N_USERS) do |bar|
-  N_USERS.times do 
+  N_USERS.times do
     user = user_gen
     user.roles << @ord_role
     bar.increment
@@ -386,11 +386,11 @@ progress_bar_gen("User Profiles [7/16]", 6*User.count) do |bar|
       bar.increment
     end
   end
-end  
+end
 
 # Creating Notices
 progress_bar_gen("Notices [8/16]", N_DEPARTMENT_WIDE_NOTICES*2+N_ANNOUNCEMENTS+N_STICKIES+N_LINKS) do |bar|
-  N_DEPARTMENT_WIDE_NOTICES.times do 
+  N_DEPARTMENT_WIDE_NOTICES.times do
     announcement_gen; bar.increment
     link_gen; bar.increment
   end
@@ -415,7 +415,7 @@ progress_bar_gen("Shifts [10/16]", nShifts) do |bar|
   (1..TOTAL_DAYS).each do |d|
     users = User.all.sample(Location.count*N_SHIFTS_PER_DAY_PER_LOCATION)
     Location.all.each do |l|
-      N_SHIFTS_PER_DAY_PER_LOCATION.times do 
+      N_SHIFTS_PER_DAY_PER_LOCATION.times do
         shift_gen(l, Date.today+d.days, users.shift) if !users.empty?
         bar.increment
       end
@@ -426,7 +426,7 @@ end
 # Creating Tasks
 progress_bar_gen("Tasks [11/16]", N_TASKS_PER_LOCATION*Location.count) do |bar|
   Location.all.each do |l|
-    N_TASKS_PER_LOCATION.times do 
+    N_TASKS_PER_LOCATION.times do
       task_gen(l)
       bar.increment
     end
@@ -436,17 +436,17 @@ end
 # Creating DataObjects
 progress_bar_gen("Data Objects [12/16]", N_DATA_OBJECTS+1) do |bar|
   type = data_type_gen; bar.increment
-  N_DATA_OBJECTS.times do 
+  N_DATA_OBJECTS.times do
     data_object_gen(type)
     bar.increment
   end
 end
 
 # Creating Shift Reports
-shifts = Shift.where("end < ?", Time.now+N_DAYS_OF_SCHEDULE_INTO_PAST.days)
+shifts = Shift.where("'end' < ?", Time.now+N_DAYS_OF_SCHEDULE_INTO_PAST.days)
 progress_bar_gen("Shift Reports [13/16]", shifts.count) do |bar|
   shifts.each do |shift|
-    report_gen(shift) if rand()<SHIFT_SIGNED_IN_CHANCE 
+    report_gen(shift) if rand()<SHIFT_SIGNED_IN_CHANCE
     bar.increment
   end
 end
@@ -462,7 +462,7 @@ end
 
 # Creating Categories
 progress_bar_gen("Categories [15/16]", N_CATEGORIES) do |bar|
-  N_CATEGORIES.times do 
+  N_CATEGORIES.times do
     category_gen
     bar.increment
   end
@@ -473,7 +473,7 @@ progress_bar_gen("Payforms [16/16]", User.count*N_PAYFORM_ITEMS_PER_USER) do |ba
   categories = Category.all
   User.all.each do |user|
     payform = Payform.build(@department, user, Date.today)
-    N_PAYFORM_ITEMS_PER_USER.times do 
+    N_PAYFORM_ITEMS_PER_USER.times do
       payform_item_gen(payform, categories.sample)
       bar.increment
     end

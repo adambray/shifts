@@ -11,7 +11,7 @@ class Task < ActiveRecord::Base
   }
 
   scope :active, -> { where(active: true) }
-  scope :after_now, -> { where("end >= ?", Time.now.utc) }
+  scope :after_now, -> { where("'end' >= ?", Time.now.utc) }
   scope :in_locations, ->(loc_array){ where(location_id: loc_array ) }
   scope :in_location, ->(location){ where(location_id: location) }
   scope :hourly, -> { where(kind: "Hourly") }

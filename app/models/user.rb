@@ -58,7 +58,7 @@ class User < ActiveRecord::Base
 
   def set_random_password(size=20)
     chars = (('a'..'z').to_a + ('0'..'9').to_a)
-    self.password=self.password_confirmation=(1..size).collect{|a| chars[rand(chars.size)] }.join
+    self.password = self.password_confirmation = (1..size).collect{|a| chars[rand(chars.size)] }.join
   end
 
   def self.search_ldap(first_name, last_name, email, limit)
@@ -229,7 +229,7 @@ class User < ActiveRecord::Base
   #returns  upcoming sub_requests user has permission to take.  Default is for all departments
   def available_sub_requests(source)
     @all_subs = []
-    @all_subs = SubRequest.where("end >= ?", Time.now).select { |sub| self.can_take_sub?(sub) }.select{ |sub| !sub.shift.missed?}
+    @all_subs = SubRequest.where("'end' >= ?", Time.now).select { |sub| self.can_take_sub?(sub) }.select{ |sub| !sub.shift.missed?}
    if !source.blank?
        case
        when source.class.name == "Department"
@@ -380,7 +380,7 @@ class User < ActiveRecord::Base
       end
 
       attrs.delete("role") # Not useful for initial User creation
-      
+
       u = User.new(attrs)
       u.set_random_password
       u.roles = roles

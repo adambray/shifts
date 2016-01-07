@@ -13,12 +13,12 @@ class SubRequestsController < ApplicationController
         @title_add=" Index"
         @index_link=false
       else #all future sub requests
-        @subs = SubRequest.where("end >= ?", Time.now).order('start')
+        @subs = SubRequest.where("'end' >= ?", Time.now).order('start')
         @title_add=" Index"
         @index_link=false
       end
     else #all future sub requests
-      @subs = SubRequest.where("end >= ?", Time.now).order('start')
+      @subs = SubRequest.where("'end' >= ?", Time.now).order('start')
       @title_add=" Index"
       @index_link=false
     end

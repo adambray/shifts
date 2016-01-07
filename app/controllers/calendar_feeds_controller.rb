@@ -44,7 +44,7 @@ class CalendarFeedsController < ApplicationController
         when @source.class.name == "LocGroup" && @user.can_view?(@source)
             @shifts = Shift.active.in_locations(@source.locations).after_date(Time.now.utc - 3.weeks).not_for_user(@user).flatten
         when @source.class.name == "Location" && @user.can_view?(@source.loc_group)
-            @shifts = Shift.active.not_for_user(@user).where("location_id = ? AND end >= ?", @source.id, Time.now.utc - 3.weeks)
+            @shifts = Shift.active.not_for_user(@user).where("location_id = ? AND 'end' >= ?", @source.id, Time.now.utc - 3.weeks)
         when @source.class.name == "User"
             @shifts = Shift.active.in_departments(@source.active_departments).for_user(@source).after_date(Time.now.utc - 3.weeks).flatten
       end
@@ -115,4 +115,3 @@ class CalendarFeedsController < ApplicationController
 
 
 end
-

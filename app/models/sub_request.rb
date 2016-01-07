@@ -138,7 +138,7 @@ class SubRequest < ActiveRecord::Base
   end
 
   def user_does_not_have_concurrent_sub_request
-    c = SubRequest.where("shift_id = ? AND start < ? AND end > ?", self.shift_id, self.end, self.start).count
+    c = SubRequest.where("shift_id = ? AND start < ? AND 'end' > ?", self.shift_id, self.end, self.start).count
     unless c.zero?
       errors.add(:base, "#{self.shift.user.name} has an overlapping sub request in that period.") unless (self.id and c==1)
     end
@@ -152,4 +152,3 @@ class SubRequest < ActiveRecord::Base
   end
 
 end
-
