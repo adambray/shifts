@@ -5,7 +5,7 @@ class CreateRequestedShifts < ActiveRecord::Migration
       t.datetime :preferred_end
       t.datetime :acceptable_start
       t.datetime :acceptable_end
-      t.date :day
+      t.integer :day
 			t.references :template
 			t.references :user
       t.timestamps

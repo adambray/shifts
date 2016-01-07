@@ -3,7 +3,7 @@ source 'https://rubygems.org'
 ruby '2.1.2' # Version in .ruby-version must match
 
 gem 'rails', '3.2.21'
-gem 'mysql2'
+gem 'pg'
 
 gem 'jquery-rails'
 gem 'jquery-ui-rails'
